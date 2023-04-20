@@ -1,0 +1,94 @@
+﻿using AutoMapper;
+using LibraryAPI.DTOs;
+using LibraryAPI.Interfaces;
+using LibraryAPI.Models;
+using LibraryAPI.Repositories;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+namespace LibraryAPI.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class BorrowTransactionsController : ControllerBase
+    {
+        private readonly IBorrowTransactionRepository _borrowTransactionRepository;
+        private readonly IMapper _mapper;
+
+        private readonly IUserRepository _userRepository;
+        private readonly ILibraryItemRepository _libraryItemRepository;
+
+        public BorrowTransactionsController(IBorrowTransactionRepository borrowTransactionRepository, IUserRepository userRepository, ILibraryItemRepository libraryItemRepository, IMapper mapper)
+        {
+            _userRepository = userRepository;
+            _libraryItemRepository = libraryItemRepository;
+            _borrowTransactionRepository = borrowTransactionRepository;
+            _mapper = mapper;
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<BorrowTransactionDTO>>> GetAllAsync()
+        {
+            var borrowTransactions = await _borrowTransactionRepository.GetAllAsync();
+            var borrowTransactionDTOs = _mapper.Map<IEnumerable<BorrowTransactionDTO>>(borrowTransactions);
+            return Ok(borrowTransactionDTOs);
+        }
+
+        [HttpGet("{id}", Name = "GetTransactionById")]
+        public async Task<ActionResult<BorrowTransactionDTO>> GetByIdAsync(int id)
+        {
+            var borrowTransaction = await _borrowTransactionRepository.GetByIdAsync(id);
+
+            if (borrowTransaction == null)
+            {
+                return NotFound();
+            }
+
+            var borrowTransactionDTO = _mapper.Map<BorrowTransactionDTO>(borrowTransaction);
+            return Ok(borrowTransactionDTO);
+        }
+
+        [HttpPost("assign-book")]
+        public async Task<ActionResult<BorrowTransactionDTO>> AssignBookAsync(AssignBookDTO assignBookDTO)
+        {
+  
+            var user = await _userRepository.GetByIdAsync(assignBookDTO.UserID);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            var libraryItem = await _libraryItemRepository.GetByIdAsync(assignBookDTO.ItemID);
+            if (libraryItem == null)
+            {
+                return NotFound("Library item not found.");
+            }
+
+            if (libraryItem.AvailabilityStatus != AvailabilityStatus.Available)
+            {
+                return BadRequest("The library item is not available.");
+            }
+
+
+            var borrowTransaction = new BorrowTransaction
+            {
+                UserID = assignBookDTO.UserID,
+                ItemID = assignBookDTO.ItemID,
+                BorrowDate = assignBookDTO.BorrowDate,
+                DueDate = assignBookDTO.DueDate
+            };
+
+            await _borrowTransactionRepository.AddAsync(borrowTransaction);
+            await _borrowTransactionRepository.SaveChangesAsync();
+
+
+            libraryItem.AvailabilityStatus = AvailabilityStatus.Borrowed;
+            _libraryItemRepository.Update(libraryItem);
+            await _libraryItemRepository.SaveChangesAsync();
+
+            var borrowTransactionDTO = _mapper.Map<BorrowTransactionDTO>(borrowTransaction);
+            return CreatedAtRoute("GetTransactionById", new { id = borrowTransaction.TransactionID }, borrowTransactionDTO);
+        }
+
+    }
+}
