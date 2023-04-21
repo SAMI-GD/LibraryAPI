@@ -13,11 +13,13 @@ namespace LibraryAPI.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
+        private readonly IBorrowTransactionRepository _borrowTransactionRepository;
         private readonly IMapper _mapper;
 
-        public UsersController(IUserRepository userRepository, IMapper mapper)
+        public UsersController(IUserRepository userRepository, IBorrowTransactionRepository borrowTransactionRepository, IMapper mapper)
         {
             _userRepository = userRepository;
+            _borrowTransactionRepository = borrowTransactionRepository;
             _mapper = mapper;
         }
 
@@ -85,16 +87,28 @@ namespace LibraryAPI.Controllers
                 return NotFound();
             }
 
+
+                bool hasTransactions = await _borrowTransactionRepository.UserHasTransactionsAsync(id);
+                if (hasTransactions)
+                {
+                    return BadRequest("Cannot delete user with related transactions.");
+                }
+
+
             _userRepository.Delete(user);
             await _userRepository.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { message = "User deleted successfully." });
         }
+
+
+
+
     }
 
     public class UpdateUserResponse
     {
-        public UserDTO User { get; set; }
-        public string Message { get; set; }
+        public UserDTO User { get; set; } = new UserDTO();
+        public string Message { get; set; } = string.Empty;
     }
 }

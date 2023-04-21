@@ -10,5 +10,10 @@ namespace LibraryAPI.Interfaces
         void Update(BorrowTransaction borrowTransaction);
         void Delete(BorrowTransaction borrowTransaction);
         Task SaveChangesAsync();
+
+        Task<IEnumerable<BorrowTransaction>> GetBorrowingHistoryByUserIdAsync(int userId);
+        Task<bool> UserHasTransactionsAsync(int userId);
+        Task<bool> LibraryItemHasTransactionsAsync(int itemId);
+
     }
 }

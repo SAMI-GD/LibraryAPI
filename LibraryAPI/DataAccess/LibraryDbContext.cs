@@ -44,8 +44,8 @@ namespace LibraryAPI.DataAccess
             );
 
             modelBuilder.Entity<User>().HasData(
-                new User { UserID = 1, FirstName = "John", LastName = "Doe", Email = "john.doe@example.com", PhoneNumber = "123-456-7890" },
-                new User { UserID = 2, FirstName = "Jane", LastName = "Doe", Email = "jane.doe@example.com", PhoneNumber = "123-456-7891" }
+                new User { UserID = 1, FirstName = "Samila", LastName = "Gunarathna", Email = "samilagunarathna@gmail.com", PhoneNumber = "076-938-6116" },
+                new User { UserID = 2, FirstName = "Bob", LastName = "Williams", Email = "bob.williams@gmail.com", PhoneNumber = "123-456-7891" }
             );
 
             modelBuilder.Entity<BorrowTransaction>().HasData(

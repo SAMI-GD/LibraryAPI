@@ -2,8 +2,12 @@
 using LibraryAPI.DTOs;
 using LibraryAPI.Interfaces;
 using LibraryAPI.Models;
+using LibraryAPI.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Swashbuckle.AspNetCore.Annotations;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace LibraryAPI.Controllers
 {
@@ -12,15 +16,18 @@ namespace LibraryAPI.Controllers
     public class LibraryItemsController : ControllerBase
     {
         private readonly ILibraryItemRepository _libraryItemRepository;
+        private readonly IBorrowTransactionRepository _borrowTransactionRepository;
         private readonly IMapper _mapper;
 
-        public LibraryItemsController(ILibraryItemRepository libraryItemRepository, IMapper mapper)
+        public LibraryItemsController(ILibraryItemRepository libraryItemRepository, IBorrowTransactionRepository borrowTransactionRepository, IMapper mapper)
         {
             _libraryItemRepository = libraryItemRepository;
+            _borrowTransactionRepository = borrowTransactionRepository;
             _mapper = mapper;
         }
-
+        //Get All Books
         [HttpGet]
+        [SwaggerOperation("Get All Books")]
         public async Task<ActionResult<IEnumerable<LibraryItemDTO>>> GetAllAsync()
         {
             var libraryItems = await _libraryItemRepository.GetAllAsync();
@@ -41,8 +48,9 @@ namespace LibraryAPI.Controllers
             var libraryItemDTO = _mapper.Map<LibraryItemDTO>(libraryItem);
             return Ok(libraryItemDTO);
         }
-        //search Items by title.
+
         [HttpGet("search")]
+        [SwaggerOperation("Search Library Items by Title")]
         public async Task<IActionResult> SearchByTitleAsync(string title)
         {
             if (string.IsNullOrWhiteSpace(title))
@@ -60,7 +68,29 @@ namespace LibraryAPI.Controllers
             return Ok(_mapper.Map<IEnumerable<LibraryItemBasicDTO>>(libraryItems));
         }
 
+        //Search Books by Title.
+        [HttpGet("search/book")]
+        [SwaggerOperation("Search Books by Title")]
+        public async Task<IActionResult> SearchBooksByTitleAsync(string title)
+        {
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                return BadRequest("Title must not be empty.");
+            }
+
+            IEnumerable<LibraryItem> libraryItems = await _libraryItemRepository.SearchByTitleAndTypeAsync(title, ItemType.Book);
+
+            if (!libraryItems.Any())
+            {
+                return NotFound("No books found with the given title.");
+            }
+
+            return Ok(_mapper.Map<IEnumerable<LibraryItemBasicDTO>>(libraryItems));
+        }
+
+        //Search Items by Author and Availability Status
         [HttpGet("search/author-availability")]
+        [SwaggerOperation("Search Items by Author and Availability Status")]
         public async Task<ActionResult<IEnumerable<LibraryItemBasicDTO>>> SearchByAuthorAndAvailabilityAsync(string author, AvailabilityStatus availabilityStatus)
         {
             var libraryItems = await _libraryItemRepository.SearchByAuthorAndAvailabilityAsync(author, availabilityStatus);
@@ -69,6 +99,21 @@ namespace LibraryAPI.Controllers
             return Ok(libraryItemsDto);
         }
 
+        //Search Books by Author and Availability Status
+        [HttpGet("search/author-availability-books")]
+        [SwaggerOperation("Search Books by Author and Availability Status")]
+        public async Task<ActionResult<IEnumerable<LibraryItemBasicDTO>>> SearchBooksByAuthorAndAvailabilityAsync(string author, AvailabilityStatus availabilityStatus)
+        {
+
+            var libraryItems = await _libraryItemRepository.SearchByAuthorAndAvailabilityAndTypeAsync(author, availabilityStatus, ItemType.Book);
+            if (!libraryItems.Any())
+            {
+                return NotFound("No books found with the given Author.");
+            }
+            var libraryItemsDto = _mapper.Map<IEnumerable<LibraryItemBasicDTO>>(libraryItems);
+
+            return Ok(libraryItemsDto);
+        }
 
 
 
@@ -115,18 +160,27 @@ namespace LibraryAPI.Controllers
             {
                 return NotFound();
             }
+                bool hasTransactions = await _borrowTransactionRepository.LibraryItemHasTransactionsAsync(id);
+                if (hasTransactions)
+                {
+                    return BadRequest("Cannot delete library item with related transactions.");
+                }
+
+
 
             _libraryItemRepository.Delete(libraryItem);
             await _libraryItemRepository.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { message = "Library item deleted successfully." });
         }
 
     }
 
+
     public class UpdateLibraryItemResponse
     {
-        public LibraryItemDTO LibraryItem { get; set; }
-        public string Message { get; set; }
+        public LibraryItemDTO LibraryItem { get; set; } = new LibraryItemDTO();
+        public string Message { get; set; } = string.Empty;
     }
 }
+

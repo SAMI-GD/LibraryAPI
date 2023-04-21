@@ -2,6 +2,7 @@
 using LibraryAPI.Interfaces;
 using LibraryAPI.Models;
 using Microsoft.EntityFrameworkCore;
+using static System.Reflection.Metadata.BlobBuilder;
 
 namespace LibraryAPI.Repositories
 {
@@ -58,11 +59,31 @@ namespace LibraryAPI.Repositories
                 .ToListAsync();
         }
 
+        //Search Books by Title repo
+        public async Task<IEnumerable<LibraryItem>> SearchByTitleAndTypeAsync(string title, ItemType itemType)
+        {
+            if (title.Length < 3)
+            { return new List<LibraryItem>(); }
 
+            return await _context.LibraryItems
+                .Where(li => li.Title.Contains(title) && li.ItemType == itemType)
+                .ToListAsync();
+        }
+
+
+        //Search Items by Author and Availability Status
         public async Task<IEnumerable<LibraryItem>> SearchByAuthorAndAvailabilityAsync(string author, AvailabilityStatus availabilityStatus)
         {
             return await _context.LibraryItems
                 .Where(li => li.Author.Contains(author) && li.AvailabilityStatus == availabilityStatus)
+                .ToListAsync();
+        }
+
+        //Search Books by Author and Availability Status
+        public async Task<IEnumerable<LibraryItem>> SearchByAuthorAndAvailabilityAndTypeAsync(string author, AvailabilityStatus availabilityStatus, ItemType itemType)
+        {
+            return await _context.LibraryItems
+                .Where(li => li.Author.Contains(author) && li.AvailabilityStatus == availabilityStatus && li.ItemType == itemType)
                 .ToListAsync();
         }
 

@@ -5,6 +5,7 @@ using LibraryAPI.Models;
 using LibraryAPI.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace LibraryAPI.Controllers
 {
@@ -47,11 +48,11 @@ namespace LibraryAPI.Controllers
             var borrowTransactionDTO = _mapper.Map<BorrowTransactionDTO>(borrowTransaction);
             return Ok(borrowTransactionDTO);
         }
-
+        //Assign a Book to a User
         [HttpPost("assign-book")]
-        public async Task<ActionResult<BorrowTransactionDTO>> AssignBookAsync(AssignBookDTO assignBookDTO)
+        [SwaggerOperation("Assign a Book to a User")]
+        public async Task<ActionResult<object>> AssignBookAsync(AssignBookDTO assignBookDTO)
         {
-  
             var user = await _userRepository.GetByIdAsync(assignBookDTO.UserID);
             if (user == null)
             {
@@ -69,7 +70,6 @@ namespace LibraryAPI.Controllers
                 return BadRequest("The library item is not available.");
             }
 
-
             var borrowTransaction = new BorrowTransaction
             {
                 UserID = assignBookDTO.UserID,
@@ -81,14 +81,33 @@ namespace LibraryAPI.Controllers
             await _borrowTransactionRepository.AddAsync(borrowTransaction);
             await _borrowTransactionRepository.SaveChangesAsync();
 
-
             libraryItem.AvailabilityStatus = AvailabilityStatus.Borrowed;
             _libraryItemRepository.Update(libraryItem);
             await _libraryItemRepository.SaveChangesAsync();
 
             var borrowTransactionDTO = _mapper.Map<BorrowTransactionDTO>(borrowTransaction);
-            return CreatedAtRoute("GetTransactionById", new { id = borrowTransaction.TransactionID }, borrowTransactionDTO);
+            var libraryItemDTO = _mapper.Map<LibraryItemDTO>(libraryItem);
+
+            var response = new
+            {
+                transaction = borrowTransactionDTO,
+                libraryItem = libraryItemDTO,
+                message = "The book has been assigned to the user successfully."
+            };
+
+            return CreatedAtRoute("GetTransactionById", new { id = borrowTransaction.TransactionID }, response);
         }
+
+        //Check The Borrowing History of a User
+        [HttpGet("user/{userId}")]
+        [SwaggerOperation("Check The Borrowing History of a User")]
+        public async Task<ActionResult<IEnumerable<BorrowTransactionDTO>>> GetUserBorrowingHistory(int userId)
+        {
+            var borrowTransactions = await _borrowTransactionRepository.GetBorrowingHistoryByUserIdAsync(userId);
+            var borrowTransactionDTOs = _mapper.Map<IEnumerable<BorrowTransactionDTO>>(borrowTransactions);
+            return Ok(borrowTransactionDTOs);
+        }
+
 
     }
 }

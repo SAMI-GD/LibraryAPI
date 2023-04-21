@@ -16,19 +16,24 @@ namespace LibraryAPI.Repositories
 
         public async Task<IEnumerable<BorrowTransaction>> GetAllAsync()
         {
-            return await _context.BorrowTransactions
+            List<BorrowTransaction> borrowTransactions = await _context.BorrowTransactions
                 .Include(bt => bt.User)
                 .Include(bt => bt.LibraryItem)
                 .ToListAsync();
+
+            return borrowTransactions;
         }
 
         public async Task<BorrowTransaction> GetByIdAsync(int id)
         {
-            return await _context.BorrowTransactions
+            BorrowTransaction borrowTransaction = await _context.BorrowTransactions
                 .Include(bt => bt.User)
                 .Include(bt => bt.LibraryItem)
                 .FirstOrDefaultAsync(bt => bt.TransactionID == id);
+
+            return borrowTransaction;
         }
+
 
         public async Task AddAsync(BorrowTransaction borrowTransaction)
         {
@@ -48,6 +53,23 @@ namespace LibraryAPI.Repositories
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
+        }
+
+        public async Task <IEnumerable<BorrowTransaction>> GetBorrowingHistoryByUserIdAsync(int userId)
+        {
+            return await _context.BorrowTransactions
+                .Include(bt => bt.User)
+                .Include(bt => bt.LibraryItem)
+                .Where(bt =>bt.UserID == userId).ToListAsync();
+        }
+
+        public async Task<bool> UserHasTransactionsAsync(int userId)
+        {
+            return await _context.BorrowTransactions.AnyAsync(t => t.UserID == userId);
+        }
+        public async Task<bool> LibraryItemHasTransactionsAsync(int itemId)
+        {
+            return await _context.BorrowTransactions.AnyAsync(t => t.ItemID == itemId);
         }
     }
 }

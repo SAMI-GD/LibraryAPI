@@ -9,8 +9,8 @@ namespace LibraryAPI.Profiles
         public BorrowTransactionProfile()
         {
             CreateMap<BorrowTransaction, BorrowTransactionDTO>()
-                        .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.FirstName))
-                        .ForMember(dest => dest.LibraryItemTitle, opt => opt.MapFrom(src => src.LibraryItem.Title));
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.FirstName))
+                .ForMember(dest => dest.LibraryItemTitle, opt => opt.MapFrom(src => src.LibraryItem.Title));
         }
     }
 }

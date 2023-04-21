@@ -3,7 +3,7 @@
     public class BorrowTransaction
     {
         public int TransactionID { get; set; }
-        public int UserID { get; set; }
+        public int UserID { get; set; } 
         public int ItemID { get; set; }
         public DateTime BorrowDate { get; set; }
         public DateTime? ReturnDate { get; set; }
@@ -13,5 +13,6 @@
         // Navigation properties
         public User User { get; set; }
         public LibraryItem LibraryItem { get; set; }
+
     }
 }
