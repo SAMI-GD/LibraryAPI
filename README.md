@@ -7,7 +7,7 @@
     - .NET 7 SDK
     - SQL Server (or another database system of your choice)
     - SQL Server Management Studio (or another database management tool of your choice)
-2. 1. Clone the `LibraryAPI` project from the [repository](https://github.com/SAMI-GD/LibraryAPI) or extract it from the provided zip file.
+2. Clone the `LibraryAPI` project from the [repository](https://github.com/SAMI-GD/LibraryAPI) or extract it from the provided zip file.
 3. Open the `LibraryAPI` solution in **Visual Studio**.
 4. Update the **`appsettings.json`** file with your database connection string:
     
