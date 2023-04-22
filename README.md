@@ -65,7 +65,7 @@ Once the API is running, you can use tools like Postman or the built-in Swagger 
     ```
     
     ```json
-    **[
+    [
       {
         "userID": 0,
         "firstName": "string",
@@ -73,7 +73,7 @@ Once the API is running, you can use tools like Postman or the built-in Swagger 
         "email": "string",
         "phoneNumber": "string"
       }
-    ]**
+    ]
     ```
     
 - Get ****User by ID****
@@ -87,13 +87,13 @@ Once the API is running, you can use tools like Postman or the built-in Swagger 
     ```
     
     ```json
-      **{
+      {
         "userID": 0,
         "firstName": "string",
         "lastName": "string",
         "email": "string",
         "phoneNumber": "string"
-      }**
+      }
     ```
     
 
